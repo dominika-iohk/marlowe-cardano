@@ -54,7 +54,7 @@ import           Language.Marlowe.Pretty         (Pretty (..))
 import           Language.Marlowe.SemanticsTypes (AccountId, Accounts, Action (..), Case (..), Contract (..),
                                                   Environment (..), Input (..), IntervalError (..), IntervalResult (..),
                                                   Money, Observation (..), Party, Payee (..), SlotInterval, State (..),
-                                                  Token (..), Value (..), ValueId, inBounds)
+                                                  Token (..), Value (..), ValueId, getAction, inBounds)
 import           Ledger                          (Slot (..), ValidatorHash)
 import           Ledger.Value                    (CurrencySymbol (..))
 import qualified Ledger.Value                    as Val
@@ -136,6 +136,7 @@ data ApplyWarning = ApplyNoWarning
 -- | Result of 'applyCases'
 data ApplyResult = Applied ApplyWarning State Contract
                  | ApplyNoMatchError
+                 | ApplyHashMismatch
   deriving stock (Haskell.Show)
 
 
@@ -416,31 +417,52 @@ reduceContractUntilQuiescent env state contract = let
 
     in reductionLoop False env state contract [] []
 
+data ApplyAction = AppliedAction ApplyWarning State
+                 | NotAppliedAction
+  deriving stock (Haskell.Show)
 
--- | Apply a single Input to the contract (assumes the contract is reduced)
+-- | Try to apply a single input content to a single action
+applyAction :: Environment -> State -> Input -> Action -> ApplyAction
+applyAction env state (IDeposit accId1 party1 tok1 amount) (Deposit accId2 party2 tok2 val) =
+    if accId1 == accId2 && party1 == party2 && tok1 == tok2 && amount == evalValue env state val
+    then let warning = if amount > 0 then ApplyNoWarning
+                       else ApplyNonPositiveDeposit party2 accId2 tok2 amount
+             newAccounts = addMoneyToAccount accId1 tok1 amount (accounts state)
+             newState = state { accounts = newAccounts }
+         in AppliedAction warning newState
+    else NotAppliedAction
+applyAction _ state (IChoice choId1 choice) (Choice choId2 bounds) =
+    if choId1 == choId2 && inBounds choice bounds
+    then let newState = state { choices = Map.insert choId1 choice (choices state) }
+         in AppliedAction ApplyNoWarning newState
+    else NotAppliedAction
+applyAction env state INotify (Notify obs)
+    | evalObservation env state obs = AppliedAction ApplyNoWarning state
+applyAction _ _ _ _ = NotAppliedAction
+
+-- | Try to get a continuation from a pair of Input and Case
+getContinuation :: Environment -> Case Contract -> Maybe Contract
+getContinuation env cs = case cs of
+    Case _ continuation           -> Just continuation
+    HashedCase _ continuationHash -> findContinuationByHash continuationHash
+
+
+-- We need to pass this function somehow
+findContinuationByHash :: BuiltinByteString -> Maybe Contract
+findContinuationByHash _ = Nothing
+
+
 applyCases :: Environment -> State -> Input -> [Case Contract] -> ApplyResult
-applyCases env state input cases = case (input, cases) of
-    (IDeposit accId1 party1 tok1 amount,
-        Case (Deposit accId2 party2 tok2 val) cont : rest) ->
-        if accId1 == accId2 && party1 == party2 && tok1 == tok2
-                && amount == evalValue env state val
-        then let
-            warning = if amount > 0 then ApplyNoWarning
-                      else ApplyNonPositiveDeposit party2 accId2 tok2 amount
-            newAccounts = addMoneyToAccount accId1 tok1 amount (accounts state)
-            newState = state { accounts = newAccounts }
-            in Applied warning newState cont
-        else applyCases env state input rest
-    (IChoice choId1 choice, Case (Choice choId2 bounds) cont : rest) ->
-        if choId1 == choId2 && inBounds choice bounds
-        then let
-            newState = state { choices = Map.insert choId1 choice (choices state) }
-            in Applied ApplyNoWarning newState cont
-        else applyCases env state input rest
-    (INotify, Case (Notify obs) cont : _)
-        | evalObservation env state obs -> Applied ApplyNoWarning state cont
-    (_, _ : rest) -> applyCases env state input rest
-    (_, []) -> ApplyNoMatchError
+applyCases env state input (headCase : tailCase) =
+    let action = getAction headCase :: Action
+        maybeContinuation = getContinuation env headCase :: Maybe Contract
+    in case applyAction env state input action of
+         AppliedAction warning newState ->
+           case maybeContinuation of
+             Just continuation -> Applied warning newState continuation
+             Nothing           -> ApplyHashMismatch
+         NotAppliedAction -> applyCases env state input tailCase
+applyCases _ _ _ [] = ApplyNoMatchError
 
 
 -- | Apply a single @Input@ to a current contract

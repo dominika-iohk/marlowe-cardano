@@ -184,9 +184,14 @@ data Payee = Account AccountId
     datatype Case is mutually recurvive with @Contract@
 -}
 data Case a = Case Action a
+            | HashedCase Action BuiltinByteString
   deriving stock (Haskell.Show,Generic,Haskell.Eq,Haskell.Ord)
   deriving anyclass (Pretty)
 
+
+getAction :: Case a -> Action
+getAction (Case action _)       = action
+getAction (HashedCase action _) = action
 
 {-| Marlowe has six ways of building contracts.
     Five of these – 'Pay', 'Let', 'If', 'When' and 'Assert' –
@@ -722,7 +727,7 @@ makeIsDataIndexed ''Bound [('Bound,0)]
 makeLift ''Action
 makeIsDataIndexed ''Action [('Deposit,0),('Choice,1),('Notify,2)]
 makeLift ''Case
-makeIsDataIndexed ''Case [('Case,0)]
+makeIsDataIndexed ''Case [('Case,0),('HashedCase,1)]
 makeLift ''Payee
 makeIsDataIndexed ''Payee [('Account,0),('Party,1)]
 makeLift ''Contract

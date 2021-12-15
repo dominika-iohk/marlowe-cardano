@@ -26,7 +26,7 @@
 module Language.Marlowe.Scripts where
 import           Data.Default                     (Default (def))
 import           Language.Marlowe.Semantics
-import           Language.Marlowe.SemanticsTypes  hiding (Contract)
+import           Language.Marlowe.SemanticsTypes
 import           Ledger
 import           Ledger.Ada                       (adaSymbol)
 import           Ledger.Constraints
@@ -253,6 +253,12 @@ smallMarloweValidator MarloweParams{rolesCurrency, rolePayoutValidatorHash} Marl
         Error TEUselessTransaction -> traceError "E5"
 
   where
+
+    datums = AssocMap.fromList (fmap () txInfoData scriptContextTxInfo)
+
+    findContinuationByHash :: BuiltinByteString -> Maybe Contract
+    findContinuationByHash hash = fmap PlutusTx.fromBuiltinData $ AssocMap.lookup hash datums
+
     checkScriptOutput addr hsh value TxOut{txOutAddress, txOutValue, txOutDatumHash=Just svh} =
                     txOutValue == value && hsh == Just svh && txOutAddress == addr
     checkScriptOutput _ _ _ _ = False
