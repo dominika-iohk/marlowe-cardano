@@ -617,6 +617,18 @@ let
         installPhase = "ln -s $src $out";
       };
 
+    "heterogeneous" = pkgs.stdenv.mkDerivation {
+        name = "heterogeneous";
+        version = "v0.5.1";
+        src = pkgs.fetchgit {
+          url = "https://github.com/natefaubion/purescript-heterogeneous.git";
+          rev = "550445cf7932e158395423fc087cdc05bab41c40";
+          sha256 = "08bpgm9p8ib1jzrmssqpa1bqqzfmba43lsih1xvr3pf1jfizayxg";
+        };
+        phases = "installPhase";
+        installPhase = "ln -s $src $out";
+      };
+
     "http-methods" = pkgs.stdenv.mkDerivation {
         name = "http-methods";
         version = "v5.0.0";
@@ -1224,18 +1236,6 @@ let
           url = "https://github.com/purescript/purescript-st.git";
           rev = "994eb5e650f3caedac385dcc61694f691df57983";
           sha256 = "14hz254f1y0k3v83z719np0ddrgbca0hdsd9dvv244i07vlvm2zj";
-        };
-        phases = "installPhase";
-        installPhase = "ln -s $src $out";
-      };
-
-    "string-parsers" = pkgs.stdenv.mkDerivation {
-        name = "string-parsers";
-        version = "v6.0.1";
-        src = pkgs.fetchgit {
-          url = "https://github.com/purescript-contrib/purescript-string-parsers.git";
-          rev = "7c3cad8ce7cd4d1036eeafa09af323dc7b8d367c";
-          sha256 = "143a2s56kbx3i0xi5wfqp28znr0hdydy902jla236i7kal5y098m";
         };
         phases = "installPhase";
         installPhase = "ln -s $src $out";
