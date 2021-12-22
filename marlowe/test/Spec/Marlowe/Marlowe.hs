@@ -294,7 +294,7 @@ validatorSize = do
     let vsize = SBS.length. SBS.toShort . LB.toStrict $ Serialise.serialise validator
     let validator1 = Scripts.validatorScript $ smallTypedValidator defaultMarloweParams
     let vsize1 = SBS.length. SBS.toShort . LB.toStrict $ Serialise.serialise validator1
-    let validator2 = smallUntypedValidator defaultMarloweParams
+    let validator2 = Scripts.validatorScript $ smallUntypedValidator defaultMarloweParams
     let vsize2 = SBS.length. SBS.toShort . LB.toStrict $ Serialise.serialise validator2
     assertBool ("StateMachine Validator is too large " <> show vsize) (vsize < 18000)
     assertBool ("smallTypedValidator is too large " <> show vsize1) (vsize1 < 15000)
