@@ -53,7 +53,7 @@ import           Language.Marlowe.SemanticsTypes
 import           Language.Marlowe.Serialisation            (intToByteString, listToByteString)
 import           Language.Marlowe.Util
 import           Ledger                                    (Slot (..), pubKeyHash, validatorHash)
-import           Ledger.Ada                                (lovelaceValueOf)
+import           Ledger.Ada                                (adaValueOf, lovelaceValueOf)
 import           Ledger.Constraints.TxConstraints          (TxConstraints)
 import qualified Ledger.Typed.Scripts                      as Scripts
 import qualified Ledger.Value                              as Val
@@ -161,8 +161,8 @@ zeroCouponBondTest = checkPredicateOptions defaultCheckOptions "Zero Coupon Bond
 errorHandlingTest :: TestTree
 errorHandlingTest = checkPredicateOptions defaultCheckOptions "Error handling"
     (assertAccumState marlowePlutusContract (Trace.walletInstanceTag alice)
-    (\case SomeError _ "apply-inputs" (TransitionError _) -> True
-           _                                              -> False
+    (\case SomeError _ "apply-inputs" _ -> True
+           _                            -> False
     ) "should be fail with SomeError"
     ) $ do
     -- Init a contract
@@ -195,8 +195,8 @@ trustFundTest = checkPredicateOptions defaultCheckOptions "Trust Fund Contract"
     -- T..&&. emulatorLog (const False) ""
     T..&&. assertNotDone marlowePlutusContract (Trace.walletInstanceTag alice) "contract should not have any errors"
     T..&&. assertNotDone marlowePlutusContract (Trace.walletInstanceTag bob) "contract should not have any errors"
-    T..&&. walletFundsChange alice (lovelaceValueOf (-256) <> Val.singleton (rolesCurrency params) "alice" 1)
-    T..&&. walletFundsChange bob (lovelaceValueOf 256 <> Val.singleton (rolesCurrency params) "bob" 1)
+    T..&&. walletFundsChange alice (lovelaceValueOf (-2000256) <> Val.singleton (rolesCurrency params) "alice" 1)
+    T..&&. walletFundsChange bob (lovelaceValueOf 2000256 <> Val.singleton (rolesCurrency params) "bob" 1)
     -- TODO Commented out because the new chain index does not allow to fetch
     -- all transactions that modified an address. Need to find an alternative
     -- way.
@@ -240,6 +240,8 @@ trustFundTest = checkPredicateOptions defaultCheckOptions "Trust Fund Contract"
 
             Trace.waitNSlots 2
             Trace.callEndpoint @"redeem" bobHdl (reqId, pms, "bob", bobPkh)
+            Trace.waitNSlots 2
+            Trace.callEndpoint @"redeem" aliceHdl (reqId, pms, "alice", alicePkh)
             void $ Trace.waitNSlots 2
     where
         alicePk = PK $ walletPubKeyHash alice
