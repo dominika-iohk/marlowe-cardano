@@ -29,6 +29,7 @@ type State
     , menuOpen :: Boolean
     , card :: Maybe Card
     , cardOpen :: Boolean -- see note [CardOpen] in Welcome.State (the same applies here)
+    -- TODO: SCP-3208 Move contract state to halogen store
     , contracts :: Map PlutusAppId Contract.State
     , contractFilter :: ContractFilter
     , selectedContractFollowerAppId :: Maybe PlutusAppId

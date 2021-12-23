@@ -46,6 +46,7 @@ import Page.Contract.View (contractPreviewCard, contractScreen)
 import Page.Dashboard.Lenses (_card, _cardOpen, _contactsState, _contractFilter, _menuOpen, _selectedContract, _selectedContractFollowerAppId, _templateState, _walletDetails)
 import Page.Dashboard.Types (Action(..), Card(..), ContractFilter(..), Input, State, WalletCompanionStatus(..))
 
+-- TODO: We should be able to remove Input (tz and current slot) after we make each sub-component a proper component
 dashboardScreen :: forall m. MonadAff m => Input -> State -> ComponentHTML Action ChildSlots m
 dashboardScreen { currentSlot, tzOffset } state =
   let

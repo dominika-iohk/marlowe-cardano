@@ -34,7 +34,7 @@ import Data.String (codePointFromChar)
 import Data.String.CodeUnits (toCharArray)
 import Data.UUID.Argonaut (emptyUUID, parseUUID)
 import Effect.Aff.Class (class MonadAff)
-import Env (Env)
+import Store (Env)
 import Halogen (HalogenM, modify_)
 import Halogen.Extra (mapSubmodule)
 import Halogen.Query.HalogenM (mapAction)
@@ -74,9 +74,9 @@ defaultWalletInfo =
     }
 
 handleAction ::
-  forall m.
+  forall m e.
   MonadAff m =>
-  MonadAsk Env m =>
+  MonadAsk (Env e) m =>
   ManageMarlowe m =>
   ManageMarloweStorage m =>
   Toast m =>

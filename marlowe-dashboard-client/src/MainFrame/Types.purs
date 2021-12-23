@@ -33,6 +33,8 @@ import WebSocket.Support (FromSocket) as WS
 -- state for when you have selected a wallet, and can do all of the things.
 type State
   = { webSocketStatus :: WebSocketStatus
+    -- TODO: Both currentSlot and tzOffset should be stored in the global store rather than here, but in order
+    --       to remove it from here we need to first change the sub-components that use this into proper components
     , currentSlot :: Slot
     , tzOffset :: Minutes
     , subState :: Either Welcome.State Dashboard.State

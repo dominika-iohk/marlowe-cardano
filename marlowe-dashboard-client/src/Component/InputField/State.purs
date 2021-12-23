@@ -10,7 +10,6 @@ module Component.InputField.State
 import Prologue
 import Component.InputField.Lenses (_dropdownLocked, _dropdownOpen, _pristine, _validator, _value)
 import Component.InputField.Types (class InputFieldError, Action(..), State)
-import Control.Monad.Reader (class MonadAsk)
 import Data.Array (head, last)
 import Data.Array (length, take) as Array
 import Data.BigInt.Argonaut (BigInt)
@@ -22,7 +21,6 @@ import Data.String (Pattern(..), split, splitAt)
 import Data.String (drop, length, take) as String
 import Data.String.Extra (leftPadTo, rightPadTo)
 import Effect.Aff.Class (class MonadAff)
-import Env (Env)
 import Halogen (HalogenM, modify_)
 import Marlowe.Extended.Metadata (NumberFormat(..))
 
@@ -48,7 +46,6 @@ mkInitialState mNumberFormat =
 handleAction ::
   forall m e slots msg.
   MonadAff m =>
-  MonadAsk Env m =>
   InputFieldError e =>
   Action e -> HalogenM (State e) (Action e) slots msg m Unit
 handleAction (SetValue value) =

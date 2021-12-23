@@ -27,7 +27,6 @@ import Data.Map as Map
 import Data.String (Pattern(..), split)
 import Data.UUID.Argonaut (emptyUUID) as UUID
 import Effect.Aff.Class (class MonadAff)
-import Env (Env)
 import Halogen (HalogenM, liftEffect, modify_, tell)
 import Halogen.Extra (mapSubmodule)
 import Halogen.Query.HalogenM (mapAction)
@@ -37,6 +36,7 @@ import Marlowe.PAB (PlutusAppId(..))
 import Network.RemoteData (RemoteData(..), fromEither)
 import Page.Welcome.Lenses (_card, _cardOpen, _enteringDashboardState, _remoteWalletDetails, _walletId, _walletLibrary, _walletMnemonicInput, _walletNicknameInput)
 import Page.Welcome.Types (Action(..), Card(..), State, WalletMnemonicError(..))
+import Store (Env)
 import Toast.Types (errorToast, successToast)
 import Web.HTML (window)
 import Web.HTML.Location (reload)
@@ -74,9 +74,9 @@ walletMnemonicError invalidFromServer phrase =
 -- Some actions are handled in `MainFrame.State` because they involve
 -- modifications of that state. See Note [State] in MainFrame.State.
 handleAction ::
-  forall m.
+  forall m e.
   MonadAff m =>
-  MonadAsk Env m =>
+  MonadAsk (Env e) m =>
   MainFrameLoop m =>
   ManageMarlowe m =>
   ManageMarloweStorage m =>

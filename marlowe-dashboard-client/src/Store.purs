@@ -1,6 +1,9 @@
-module Env
-  ( Env
+module Store
+  ( Action(..)
+  , Store
+  , Env
   , WebSocketManager
+  , reduce
   ) where
 
 import Capability.PlutusApps.MarloweApp.Types as MarloweApp
@@ -9,9 +12,13 @@ import Halogen (SubscriptionId)
 import Plutus.PAB.Webserver (SPSettings_)
 import Plutus.PAB.Webserver.Types (CombinedWSStreamToClient, CombinedWSStreamToServer)
 import WebSocket.Support (WebSocketManager) as WS
+import Marlowe.Semantics (Slot)
 
--- Application enviroment configuration
-type Env
+type WebSocketManager
+  = WS.WebSocketManager CombinedWSStreamToClient CombinedWSStreamToServer
+
+-- Read only global data (previously implemented through ReaderT)
+type Env e
   = { ajaxSettings :: SPSettings_
     -- This AVar helps to solve a concurrency problem in the contract carousel subscriptions.
     -- See notes in [Contract.State(unsubscribeFromSelectCenteredStep)]
@@ -25,7 +32,19 @@ type Env
     -- See note on Capability.PlutusApps.MarloweApp.Types
     , marloweAppEndpointMutex :: MarloweApp.EndpointMutex
     , wsManager :: WebSocketManager
+    | e
     }
 
-type WebSocketManager
-  = WS.WebSocketManager CombinedWSStreamToClient CombinedWSStreamToServer
+type Store
+  = Env
+      ( currentSlot :: Slot
+      )
+
+data Action
+  = AdvanceToSlot Slot
+
+reduce :: Store -> Action -> Store
+-- TODO: currently we are only setting the currentSlot global variable, but once we
+--       refactor contract state to live under the halogen store (SCP-3208) we can also move the
+--       logic of AdvanceTimedoutSteps here.
+reduce store (AdvanceToSlot newSlot) = store { currentSlot = newSlot }

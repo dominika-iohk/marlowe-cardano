@@ -50,7 +50,6 @@ import Effect (Effect)
 import Effect.Aff.AVar as AVar
 import Effect.Aff.Class (class MonadAff, liftAff)
 import Effect.Exception.Unsafe (unsafeThrow)
-import Env (Env)
 import Halogen (HalogenM, getHTMLElementRef, liftEffect, put, subscribe, tell, unsubscribe)
 import Halogen.Subscription as HS
 import MainFrame.Types (Action(..)) as MainFrame
@@ -70,6 +69,7 @@ import Marlowe.Semantics as Semantics
 import Page.Contract.Lenses (_Started, _executionState, _expandPayments, _namedActions, _participants, _pendingTransaction, _previousSteps, _selectedStep, _userParties)
 import Page.Contract.Types (Action(..), Input, PreviousStep, PreviousStepState(..), StartedState, State(..), Tab(..), scrollContainerRef)
 import Page.Dashboard.Types (Action(..)) as Dashboard
+import Store (Env)
 import Toast.Types (ajaxErrorToast, successToast)
 import Web.DOM.Element (getElementsByClassName)
 import Web.DOM.HTMLCollection as HTMLCollection
@@ -163,6 +163,7 @@ getRoleParties contract = filter isRoleParty $ Set.toUnfoldable $ getParties con
     Role _ -> true
     _ -> false
 
+-- TODO: SCP-3208 Move contract state to halogen store
 updateState :: WalletDetails -> MarloweParams -> MarloweData -> Slot -> Array TransactionInput -> State -> State
 updateState walletDetails marloweParams marloweData currentSlot transactionInputs state =
   let
@@ -227,9 +228,9 @@ withStarted ::
 withStarted f = peruse _Started >>= traverse_ f
 
 handleAction ::
-  forall m.
+  forall m e.
   MonadAff m =>
-  MonadAsk Env m =>
+  MonadAsk (Env e) m =>
   MainFrameLoop m =>
   ManageMarlowe m =>
   ManageMarloweStorage m =>
@@ -493,9 +494,9 @@ selectLastStep state@{ previousSteps } = state { selectedStep = length previousS
 --       were active at the same time, which caused scroll issues. We use an AVar to control the
 --       concurrency and assure that only one subscription is active at a time.
 unsubscribeFromSelectCenteredStep ::
-  forall m.
+  forall m e.
   MonadAff m =>
-  MonadAsk Env m =>
+  MonadAsk (Env e) m =>
   HalogenM State Action ChildSlots Msg m Unit
 unsubscribeFromSelectCenteredStep = do
   mutex <- asks _.contractStepCarouselSubscription
@@ -503,9 +504,9 @@ unsubscribeFromSelectCenteredStep = do
   for_ mSubscription unsubscribe
 
 subscribeToSelectCenteredStep ::
-  forall m.
+  forall m e.
   MonadAff m =>
-  MonadAsk Env m =>
+  MonadAsk (Env e) m =>
   HalogenM State Action ChildSlots Msg m Unit
 subscribeToSelectCenteredStep = do
   mElement <- getHTMLElementRef scrollContainerRef

@@ -42,7 +42,6 @@ import Data.Time.Duration (Milliseconds(..))
 import Data.Traversable (for)
 import Data.Tuple.Nested ((/\))
 import Effect.Aff.Class (class MonadAff)
-import Env (Env)
 import Halogen (HalogenM, modify_, tell)
 import Halogen.Extra (mapMaybeSubmodule, mapSubmodule)
 import MainFrame.Types (Action(..)) as MainFrame
@@ -59,6 +58,7 @@ import Page.Contract.State (dummyState, handleAction, mkInitialState, mkPlacehol
 import Page.Contract.Types (Action(..), State(..), StartingState) as Contract
 import Page.Dashboard.Lenses (_card, _cardOpen, _contractFilter, _contract, _contracts, _menuOpen, _selectedContract, _selectedContractFollowerAppId, _templateState, _walletCompanionStatus, _contactsState, _walletDetails)
 import Page.Dashboard.Types (Action(..), Card(..), ContractFilter(..), Input, State, WalletCompanionStatus(..))
+import Store (Env)
 import Toast.Types (ajaxErrorToast, decodedAjaxErrorToast, errorToast, successToast)
 
 -- see note [dummyState] in MainFrame.State
@@ -91,9 +91,9 @@ mkInitialState walletLibrary walletDetails contracts contractNicknames currentSl
     }
 
 handleAction ::
-  forall m.
+  forall m e.
   MonadAff m =>
-  MonadAsk Env m =>
+  MonadAsk (Env e) m =>
   MainFrameLoop m =>
   ManageContract m =>
   ManageMarloweStorage m =>
