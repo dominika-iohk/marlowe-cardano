@@ -16,7 +16,7 @@ import Component.InputField.Types (Action, State) as InputField
 import Component.InputField.Types (class InputFieldError)
 import Data.Map (Map)
 import Marlowe.Extended.Metadata (ContractTemplate)
-import Marlowe.Semantics (Slot, TokenName)
+import Marlowe.Semantics (TokenName)
 
 type State
   = { contractSetupStage :: ContractSetupStage
@@ -36,8 +36,7 @@ data ContractSetupStage
 derive instance eqContractSetupStage :: Eq ContractSetupStage
 
 type Input
-  = { currentSlot :: Slot
-    , walletLibrary :: WalletLibrary
+  = { walletLibrary :: WalletLibrary
     }
 
 data ContractNicknameError

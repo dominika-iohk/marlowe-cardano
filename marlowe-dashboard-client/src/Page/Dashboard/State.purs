@@ -347,7 +347,7 @@ handleAction input@{ currentSlot } (TemplateAction templateAction) = case templa
                 assign _templateState Template.initialState
   _ -> do
     walletLibrary <- use (_contactsState <<< _walletLibrary)
-    toTemplate $ Template.handleAction { currentSlot, walletLibrary } templateAction
+    toTemplate $ Template.handleAction { walletLibrary } templateAction
 
 -- This action is a bridge from the Contacts to the Template modules. It is used to create a
 -- contract for a specific role during contract setup.
