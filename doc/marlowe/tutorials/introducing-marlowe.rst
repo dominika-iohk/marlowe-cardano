@@ -123,7 +123,7 @@ Marlowe in action
 -----------------
 
 We are working on a production release of Marlowe on the Cardano
-blockchain early in 2021. From today, you are able to explore Marlowe
+blockchain early in 2022. From today, you are able to explore Marlowe
 for yourself, either by downloading it and using the Haskell
 implementation directly, or by using the online Marlowe Playground
 simulation tool; these are both covered in subsequent tutorials. These
